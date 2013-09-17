@@ -21,6 +21,9 @@ MYSQL_FIELD *field;
 gboolean terminar=FALSE;
 
 gint columnas=10;
+
+char *homedir;  // Directorio HOME del usuario
+char file_db_config[128];  // Variable para almacenar la ruta del archivo de configuración para la base de datos
 enum
 {
 	ATRIBUTO,
@@ -211,7 +214,7 @@ int conecta_bd()
 	char contrasena[20]="";
 	char bd[30]="";
 
-	if((fconfiguracionbd = fopen("configuracionbd.dat","r")))
+	if((fconfiguracionbd = fopen(file_db_config,"r")))
 	{
 		while(!feof(fconfiguracionbd))
 		{
@@ -290,6 +293,10 @@ on_Pedidos_show                        (GtkWidget       *widget,
 	int er;
 	
 	gchar *aviso;
+        
+        homedir = getenv("HOME");
+        strcpy(file_db_config, homedir);
+        strcat(file_db_config, "/.carnesbecerra/configuracionbd.dat");
 	
 	//Se Crea la estructura del tree view
 	tvPedidos       = GTK_TREE_VIEW(lookup_widget(widget,"treeViewPedidos"));
@@ -484,170 +491,137 @@ on_Pedidos_show                        (GtkWidget       *widget,
 	{
 		g_timer_reset(timer);
 		tiempo = g_timer_elapsed(timer, &microsegundos);
-		//printf ("Tiempo[0] = %f\n", tiempo);
 		cont2=0;
 		while(tiempo < 15)
-		{
-			//modelo = GTK_LIST_STORE( gtk_tree_view_get_model (tvPedidos));
-			
-			cont2++;
+		{   
 			tiempo = g_timer_elapsed(timer, &microsegundos);
-			//printf ("Tiempo[0] = %f\n", tiempo);
-	
 			//Se obtiene la primera fila
-    			//valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(modelo), &iter);
 			cont=0;
+                        cont2 = 0; 
+                        if (strcmp (color_aviso,"#FF4444") == 0)
+                                sprintf (color_aviso,"#000000");
+                        else
+                                sprintf (color_aviso,"#FF4444");
+
+                        if (strcmp (color_aviso2,"#d0b520") == 0)
+                                sprintf (color_aviso2,"#000000");
+                        else
+                                sprintf (color_aviso2,"#d0b520");
+
+                        modelo = gtk_list_store_new(columnas, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+
+                        gtk_list_store_clear (modelo);
+
+                        mysql_data_seek(resPedidos,0);
+
+                        cont = 0;
+                        while ((row = mysql_fetch_row(resPedidos)))
+                        {
+                                gtk_list_store_append (modelo, &iter);
+
+                                if ( (cont%2) == 0 )
+                                {
+                                        if (strcmp(row[5],"1") == 0)
+                                        {
+                                                gtk_list_store_set (modelo, &iter,
+                                                                                ATRIBUTO,16*1024,
+                                                                                ATRIBUTO2,"#EEEEEE",
+                                                                                ATRIBUTO3,color_aviso,
+                                                                                ATRAVISO1,"#FF4444",
+                                                                                COLPEDIDO,row[0],
+                                                                                COLFECHA,row[1],
+                                                                                COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
+                                                                                COLTOMO,row[3],
+                                                                                COLHORA,row[4],
+                                                                                COLAVISO,row[5],-1);
+                                        }
+                                        else
+                                        {
+
+                                                if (strcmp(row[5],"2") == 0)
+                                                {
+                                                        //printf ("ROW = %s\n", row[5]);
+                                                        gtk_list_store_set (modelo, &iter,
+                                                                                        ATRIBUTO,16*1024,
+                                                                                        ATRIBUTO2,"#EEEEEE",
+                                                                                        ATRIBUTO3,color_aviso2,
+                                                                                        ATRAVISO1,"#FF4444",
+                                                                                        COLPEDIDO,row[0],
+                                                                                        COLFECHA,row[1],
+                                                                                        COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
+                                                                                        COLTOMO,row[3],
+                                                                                        COLHORA,row[4],
+                                                                                        COLAVISO,row[5],-1);
+                                                }
+                                                else
+                                                {
+                                                        gtk_list_store_set (modelo, &iter,
+                                                                                        ATRIBUTO,16*1024,
+                                                                                        ATRIBUTO2,"#EEEEEE",
+                                                                                        ATRIBUTO3,"#222222",
+                                                                                        ATRAVISO1,"#FF4444",
+                                                                                        COLPEDIDO,row[0],
+                                                                                        COLFECHA,row[1],
+                                                                                        COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
+                                                                                        COLTOMO,row[3],
+                                                                                        COLHORA,row[4],
+                                                                                        COLAVISO,row[5],-1);
+                                                }
+                                        }
+                                }
+                                else
+                                {
+                                        if (strcmp(row[5],"1") == 0)
+                                        {
+                                                gtk_list_store_set (modelo, &iter,
+                                                                                ATRIBUTO,16*1024,
+                                                                                ATRIBUTO2,"#FFFFFF",
+                                                                                ATRIBUTO3,color_aviso,
+                                                                                COLPEDIDO,row[0],
+                                                                                COLFECHA,row[1],
+                                                                                COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
+                                                                                COLTOMO,row[3],
+                                                                                COLHORA,row[4],
+                                                                                COLAVISO,row[5],-1);
+                                        }
+                                        else
+                                        {
+                                                if (strcmp(row[5],"2") == 0)
+                                                {
+                                                        gtk_list_store_set (modelo, &iter,
+                                                                                        ATRIBUTO,16*1024,
+                                                                                        ATRIBUTO2,"#FFFFFF",
+                                                                                        ATRIBUTO3,color_aviso2,
+                                                                                        COLPEDIDO,row[0],
+                                                                                        COLFECHA,row[1],
+                                                                                        COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
+                                                                                        COLTOMO,row[3],
+                                                                                        COLHORA,row[4],
+                                                                                        COLAVISO,row[5],-1);
+                                                }
+                                                else
+                                                {
+                                                        gtk_list_store_set (modelo, &iter,
+                                                                                        ATRIBUTO,16*1024,
+                                                                                        ATRIBUTO2,"#FFFFFF",
+                                                                                        ATRIBUTO3,"#222222",
+                                                                                        COLPEDIDO,row[0],
+                                                                                        COLFECHA,row[1],
+                                                                                        COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
+                                                                                        COLTOMO,row[3],
+                                                                                        COLHORA,row[4],
+                                                                                        COLAVISO,row[5],-1);
+                                                }
+                                        }
+                                }
+                                cont++;
+                        }
+                        gtk_tree_view_set_model(tvPedidos, GTK_TREE_MODEL(modelo));
+                        g_object_unref(modelo);
 			
-			if (cont2%50000 == 0)
-			{
-				cont2 = 0; 
-				if (strcmp (color_aviso,"#FF4444") == 0)
-					sprintf (color_aviso,"#000000");
-				else
-					sprintf (color_aviso,"#FF4444");
-
-				if (strcmp (color_aviso2,"#d0b520") == 0)
-					sprintf (color_aviso2,"#000000");
-				else
-					sprintf (color_aviso2,"#d0b520");
-						
- 	   			/*while (valid)
-    				{
-					gtk_tree_model_get(GTK_TREE_MODEL(modelo), &iter, COLAVISO, &aviso, -1);
-						//printf ("Aviso = %s\n",aviso);
-					if (strcmp(aviso,"1") == 0)
-					{
-						columna = gtk_tree_view_get_column(tvPedidos,0);
-						
-						gtk_list_store_set(modelo, &iter, ATRIBUTO3, color_aviso, -1);
-					}
-					//printf ("Se cambia ");
-				
-					//se obtiene la siguiente fila
-       					valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(modelo), &iter);
-					cont++;
-			    	}*/
-				modelo = gtk_list_store_new(columnas, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
-								
-				gtk_list_store_clear (modelo);
-				
-				mysql_data_seek(resPedidos,0);
-				
-				cont = 0;
-				while ((row = mysql_fetch_row(resPedidos)))
-				{
-					gtk_list_store_append (modelo, &iter);
-					
-					if ( (cont%2) == 0 )
-					{
-						if (strcmp(row[5],"1") == 0)
-						{
-							gtk_list_store_set (modelo, &iter,
-											ATRIBUTO,16*1024,
-											ATRIBUTO2,"#EEEEEE",
-											ATRIBUTO3,color_aviso,
-											ATRAVISO1,"#FF4444",
-											COLPEDIDO,row[0],
-											COLFECHA,row[1],
-											COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
-											COLTOMO,row[3],
-											COLHORA,row[4],
-											COLAVISO,row[5],-1);
-						}
-						else
-						{
-						
-							if (strcmp(row[5],"2") == 0)
-							{
-								//printf ("ROW = %s\n", row[5]);
-								gtk_list_store_set (modelo, &iter,
-												ATRIBUTO,16*1024,
-												ATRIBUTO2,"#EEEEEE",
-												ATRIBUTO3,color_aviso2,
-												ATRAVISO1,"#FF4444",
-												COLPEDIDO,row[0],
-												COLFECHA,row[1],
-												COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
-												COLTOMO,row[3],
-												COLHORA,row[4],
-												COLAVISO,row[5],-1);
-							}
-							else
-							{
-								gtk_list_store_set (modelo, &iter,
-												ATRIBUTO,16*1024,
-												ATRIBUTO2,"#EEEEEE",
-												ATRIBUTO3,"#222222",
-												ATRAVISO1,"#FF4444",
-												COLPEDIDO,row[0],
-												COLFECHA,row[1],
-												COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
-												COLTOMO,row[3],
-												COLHORA,row[4],
-												COLAVISO,row[5],-1);
-							}
-						}
-					}
-					else
-					{
-						if (strcmp(row[5],"1") == 0)
-						{
-							gtk_list_store_set (modelo, &iter,
-											ATRIBUTO,16*1024,
-											ATRIBUTO2,"#FFFFFF",
-											ATRIBUTO3,color_aviso,
-											COLPEDIDO,row[0],
-											COLFECHA,row[1],
-											COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
-											COLTOMO,row[3],
-											COLHORA,row[4],
-											COLAVISO,row[5],-1);
-						}
-						else
-						{
-							if (strcmp(row[5],"2") == 0)
-							{
-								gtk_list_store_set (modelo, &iter,
-												ATRIBUTO,16*1024,
-												ATRIBUTO2,"#FFFFFF",
-												ATRIBUTO3,color_aviso2,
-												COLPEDIDO,row[0],
-												COLFECHA,row[1],
-												COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
-												COLTOMO,row[3],
-												COLHORA,row[4],
-												COLAVISO,row[5],-1);
-							}
-							else
-							{
-								gtk_list_store_set (modelo, &iter,
-												ATRIBUTO,16*1024,
-												ATRIBUTO2,"#FFFFFF",
-												ATRIBUTO3,"#222222",
-												COLPEDIDO,row[0],
-												COLFECHA,row[1],
-												COLCLIENTE,/*g_utf8_normalize(*/row[2]/*,-1,G_NORMALIZE_ALL)*/,
-												COLTOMO,row[3],
-												COLHORA,row[4],
-												COLAVISO,row[5],-1);
-							}
-						}
-					}
-					cont++;
-				}
-				gtk_tree_view_set_model(tvPedidos, GTK_TREE_MODEL(modelo));
-				g_object_unref(modelo);
-			}
-			//gtk_tree_view_set_model(tvPedidos, GTK_TREE_MODEL(modelo));
-			//g_object_unref(modelo);
 			while(g_main_iteration(FALSE));
+                        sleep(1);
 		}
-		//printf ("SE LIBERA 2\n");
-		//g_object_unref(G_OBJECT(modelo));
-
-		//modelo = GTK_LIST_STORE( gtk_tree_view_get_model (tvPedidos));
-		
-		//----------------------------------/
 	
 		//Se agregan los pedidos pendientes
 		if(conecta_bd() == 1)
@@ -701,10 +675,7 @@ on_Pedidos_show                        (GtkWidget       *widget,
 					gtk_tree_view_set_model(tvPedidos, GTK_TREE_MODEL(modelo));
 					g_object_unref(modelo);
 				}
-				printf ("SE LIBERA RES\n");
-				//mysql_free_result(resPedidos);
-				//printf ("SE LIBERA\n");
-				//g_object_unref(G_OBJECT(modelo));
+				//printf ("SE LIBERA RES\n");
 			}
 			
 			//Se obtiene el total de pedidos registrados
@@ -773,21 +744,15 @@ on_Pedidos_show                        (GtkWidget       *widget,
 
 		//----------------------------------------/
 		
-		//modelo = GTK_LIST_STORE( gtk_tree_view_get_model (tvPedidos));
-		//modelo = GTK_LIST_STORE( gtk_tree_view_get_model (tvPedidos));
-		//printf("Se Repite\n");
-		//printf ("SE LIBERA 2\n");
-		//g_object_unref(G_OBJECT(modelo));
 	}
 	
-	//printf ("### SE TERMINO \n");
-	//checar_pedidos(widget);	
 }
 
 void
 on_Pedidos_destroy                     (GtkObject       *object,
                                         gpointer         user_data)
 {
+    printf("Saliendo...\n");
 	terminar=TRUE;
 	g_timer_stop(timer);
 	gtk_main_quit();

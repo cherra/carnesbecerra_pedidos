@@ -5464,7 +5464,7 @@ _ACEOF
 
     CATOBJEXT=NONE
     XGETTEXT=:
-    INTLLIBS=
+    INTLLIBS=" -lgmodule-2.0 -L/usr/lib/mysql -lmysqlclient -lz"
 
     if test "${ac_cv_header_libintl_h+set}" = set; then
   echo "$as_me:$LINENO: checking for libintl.h" >&5
